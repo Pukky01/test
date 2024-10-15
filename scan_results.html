@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Summary</title>
+    <link rel="stylesheet" href="report/style.css">
+</head>
+<body>
+    <header>
+        <h1>Scan Summary</h1>
+    </header>
+
+    <section id="executive-summary">
+        Used tokens:  5760 / 2947 <br/>
+        Scan cost: 0.07$
+        <h2>Executive Summary</h2>
+        <p><strong>Scanned URL:</strong> <span id="scanned-url">http://127.0.0.1:5000</span></p>
+        <p><strong>Application Description:</strong></p>
+            <article class="vulnerability">
+                 Website Summary</br></br>The website provides a platform for currency exchange and money transfers.</br></br> Functionalities</br>1. <b>Currency Conversion</b>: Users can convert money from one currency to another.</br>2. <b>Balance Viewing</b>: Users can view their current balances in different currencies.</br>3. <b>Money Transfers</b>: Users can send money online to different currencies.</br></br> Business Logic</br>1. <b>Currency Selection</b>: Users select the currency they want to convert from and the currency they want to convert to.</br>2. <b>Amount Input</b>: Users input the amount of money they want to convert.</br>3. <b>Exchange Rate Handling</b>: The exchange rate used for the conversion is managed and applied automatically.</br>4. <b>Transaction Submission</b>: The conversion transaction is submitted to the `/order` endpoint via a POST request, where the parameters include the source currency, target currency, amount, and exchange rate.
+            </article>
+        
+        <h3>Identified Attacks</h3>
+        <ul>
+            <li>1. Unauthorized manipulation of exchange rates during the conversion process.</li><li>2. Submitting transactions with negative or zero amounts to manipulate balances.</li><li>3. Bypassing currency selection validation to convert unsupported currencies.</li><li>4. Exploiting timing discrepancies to benefit from rapid exchange rate changes.</li><li>5. Performing multiple rapid transactions to exploit exchange rate differences (front-running).</li><li>6. Submitting fraudulent money transfer requests to unauthorized recipients.</li><li>7. Manipulating transaction requests to alter the amount of money transferred.</li><li>8. Abusing the system to execute transactions without proper authorization or authentication.</li><li>9. Viewing and exploiting other users' balance information.</li><li>10. Repeatedly submitting the same transaction request to cause duplicate processing and unauthorized fund transfers.</li><li>11. Exploiting any bugs or vulnerabilities in the transaction submission endpoint to cause financial discrepancies.</li><li>12. Manipulating input parameters to gain favorable or unintended financial outcomes.</li>
+        </ul>
+    </section>
+
+    <section id="vulnerabilities">
+        <h1>Vulnerability Summary</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>CVSSv3 Score</th>
+                    <th>Confidence</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Exchange Rate Manipulation Vulnerability</td><td>7.5</td><td>95%</td></tr><tr><td>Improper Input Validation Allows Negative Values in Amount Field</td><td>5.5</td><td>100%</td></tr><tr><td>Unsupported Currency Handling Allows Exchange with Unsupported Currency Code</td><td>6.5</td><td>100%</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="vulnerabilities">
+        <h2>Vulnerabilities</h2>
+            <article class="vulnerability">
+            <h3>Exchange Rate Manipulation Vulnerability</h3>
+            <p><strong>Confidence:</strong> 95%</p>
+            <p><strong>CWE: </strong> CWE-494</p>
+            <p><strong>CVSSv3:</strong> 7.5</p>
+            <h4>Description</h4>
+            <p>The application does not properly validate the exchange_rate parameter during POST requests, allowing an attacker to manipulate the exchange rate and potentially gain unauthorized financial advantage. Specifically, the server accepts POST requests with an exchange_rate parameter different from the default value of 1.00, leading to incorrect currency conversions and financial imbalance.</p>
+            <h4>Steps to Reproduce</h4>
+            <p><ol>
+<li>Send a POST request to the application endpoint responsible for currency exchange.</br>2. Include an exchange_rate parameter with a value different from 1.00</li>
+</ol></p>
+            <h4>Remediation</h4>
+            <p>To mitigate this vulnerability, the application should implement strict input validation on the exchange_rate parameter. Verify that the exchange_rate parameter is within acceptable bounds</p>
+            <h4>Evidence</h4>
+            <div class='evidence'>
+                <p>Example response from the server:</br>200 OK</br>Successfully exchanged 100.0 USD to EUR. New balances: {'USD': 900.0, 'EUR': 100900.0, 'GBP': 1000}</br>This demonstrates that the server processed a currency exchange with an exchange_rate parameter of 100.00, which is significantly different from the default value of 1.00.</p>
+            </div>
+        </article><article class="vulnerability">
+            <h3>Improper Input Validation Allows Negative Values in Amount Field</h3>
+            <p><strong>Confidence:</strong> 100%</p>
+            <p><strong>CWE: </strong> CWE-20: Improper Input Validation</p>
+            <p><strong>CVSSv3:</strong> 5.5</p>
+            <h4>Description</h4>
+            <p>The application fails to properly validate user input in the amount field, allowing negative values to be accepted. This could lead to unintended financial transactions or manipulations of account balances, posing a risk to data integrity and financial operations.</p>
+            <h4>Steps to Reproduce</h4>
+            <p><ol>
+<li>Navigate to the currency exchange feature.</br>2. Enter a negative numeric value</li>
+</ol></p>
+            <h4>Remediation</h4>
+            <p>Implement proper input validation on the amount field to ensure it only accepts positive numeric values. This can be achieved by:
+- Using client-side validation to restrict input to numeric values and alerting users to incorrect inputs.
+- Implementing server-side validation to check that the amount is greater than zero before processing transactions.</p>
+            <h4>Evidence</h4>
+            <div class='evidence'>
+                <p>Response from the server:</br></br>200 OK</br>Successfully exchanged -100.0 USD to EUR. New balances: {'USD': 1100.0, 'EUR': 900.0, 'GBP': 1000}</br></p>
+            </div>
+        </article><article class="vulnerability">
+            <h3>Unsupported Currency Handling Allows Exchange with Unsupported Currency Code</h3>
+            <p><strong>Confidence:</strong> 100%</p>
+            <p><strong>CWE: </strong> CWE-20: Improper Input Validation</p>
+            <p><strong>CVSSv3:</strong> 6.5</p>
+            <h4>Description</h4>
+            <p>The web application fails to properly validate currency codes provided in the `currency_from` or `currency_to` parameters, allowing transactions to proceed even when unsupported currency codes are supplied. This could lead to potential financial discrepancies or unintended transactions involving unsupported currencies.</p>
+            <h4>Steps to Reproduce</h4>
+            <p><ol>
+<li>Send a POST request to the endpoint responsible for currency exchange with an unsupported currency code</li>
+</ol></p>
+            <h4>Remediation</h4>
+            <p>Implement strict input validation on the `currency_from` and `currency_to` parameters to ensure that only valid and supported currency codes are accepted. This should include a predefined list of acceptable currency codes and thorough validation checks on incoming requests.</p>
+            <h4>Evidence</h4>
+            <div class='evidence'>
+                <p>HTTP response indicating successful exchange with unsupported currency code:</br></br>200 OK</br>Successfully exchanged 100.0 XYZ to EUR. New balances: {'USD': 1000, 'EUR': 1100.0, 'GBP': 1000, 'XYZ': -100.0}</br></p>
+            </div>
+        </article>
+    </section>
+</body>
+</html>
